@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE script:module PUBLIC "-//OpenOffice.org//DTD OfficeDocument 1.0//EN" "module.dtd">
+<script:module xmlns:script="http://openoffice.org/2000/script" script:name="Module1" script:language="StarBasic" script:moduleType="normal">REM  *****  BASIC  *****
+Sub Furigana
+	On Error Goto ErrorHandler	
+	oDoc = ThisComponent 
+ 	oSheet = oDoc.CurrentController.getActiveSheet
+ 	oRange = oDoc.CurrentController.Selection 	   	
+   	nStartColumn = oRange.RangeAddress.startColumn
+   	nStartRow = oRange.RangeAddress.startRow
+	nEndColumn =oRange.RangeAddress.endColumn
+	nEndRow = oRange.RangeAddress.endRow
+
+	for x= nStartColumn to  nEndColumn
+		for y= nStartRow to nEndRow
+			oCell = oSheet.getCellByPosition(x,y)
+&apos;		 	sMoji = oCell.string
+			if oCell.string &lt;&gt; &quot;&quot; Then
+				oCell.string = FuriganaCnv(oCell.string)
+			End if
+		next
+	next
+ErrorHandler: 
+ 	ThisComponent.removeActionLock		
+End Sub
+
+Function FuriganaCnv(Intxt)
+&apos;この拡張昨日はYahooのルビ振り APIを使用しており、初期状態では関数の実行回数に制限があります。
+&apos;制限を緩和するにはアプリケーションIDを取得( https://e.developer.yahoo.co.jp/register )し、以下のAppIDに設定してください。
+AppID = &quot;dj00aiZpPWhrQ0JXMERFUFpNbCZzPWNvbnN1bWVyc2VjcmV0Jng9OTg-&quot;
+
+Dim furigana_w As  String
+Dim i As Integer
+&apos;On Error GoTo ErrorHandler
+On Error Resume Next
+svc = createUnoService( &quot;com.sun.star.sheet.FunctionAccess&quot; ) &apos;Create a service to use Calc functions
+IntxtURL = svc.callFunction(&quot;ENCODEURL&quot;,array(Intxt))
+XML_String = svc.callFunction(&quot;WEBSERVICE&quot;,array(&quot;https://jlp.yahooapis.jp/FuriganaService/V1/furigana?appid=&quot; &amp; AppID &amp; &quot;&amp;grade=1&amp;sentence=&quot; &amp; IntxtURL))
+
+
+For i = 1 to 200
+	Lipsum = svc.callFunction(&quot;FILTERXML&quot;, array(XML_String, &quot;//*[name()=&apos;Word&apos;][&quot; &amp; i &amp; &quot;]/*[name()=&apos;Furigana&apos;]&quot; ))
+	If len(Lipsum)  = 0 Then
+		Lipsum = svc.callFunction(&quot;FILTERXML&quot;, array(XML_String, &quot;//*[name()=&apos;Word&apos;][&quot; &amp; i &amp; &quot;]/*[name()=&apos;Surface&apos;]&quot; ))
+		If Lipsum = &quot;&quot; Then
+			i = 999
+		Else
+			Furigana_w = Furigana_w &amp; Lipsum
+		End If
+	Else
+		Furigana_w = Furigana_w &amp; Lipsum
+	End If
+	Lipsum = &quot;&quot;
+Next
+
+FuriganaCnv =  Furigana_w
+End Function
+
+</script:module>

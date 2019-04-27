@@ -1,0 +1,8 @@
+
+Syntax :
+
+Kanji to Furigana Converter
+
+Converts the kanji character string of the selected cell to phonetic.
+To convert, Select menu as "Tools„Addons„Kanji to Phoentic".
+
